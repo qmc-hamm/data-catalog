@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Datasets from QMC-HAMM</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<script>
+let hubUrl = "https://girder.hub.yt/api/v1";
+
+function loadCollections() {
+    return fetch("collections.json").then(response => response.json());
+}
+
+function findSubfolders(parentFolder) {
+    
+}
+
+function findItems(parentFolder) {
+    var params = {folderId: parentFolder};
+    var url = new URL(`${hubUrl}/item`);
+    url.search = new URLSearchParams(params).toString();
+    return fetch(url).then(response => response.json()).then(data => {
+        for (const {name: n, _id: itemId } of data) {
+            if (n == "README.md") {
+                renderReadme(itemId, "thisId");
+            }
+        }
+    });
+}
+
+function renderReadme(readmeItemId, destId) {
+    var url = new URL(`${hubUrl}/item/${readmeItemId}/download`);
+    fetch(url).then(response => response.text()).then(data => {
+        var el = document.getElementById(destId);
+        console.log(data);
+        el.innerHTML = marked(data);
+    });
+}
+
+function updateCollectionInfo(collections) {
+    var p = Promise.resolve("");
+    for (const {folder_id: fid, name: n} of collections) {
+        var params = {parentId: fid, parentType: 'folder'};
+        var url = new URL(`${hubUrl}/folder`);
+        p = p.then(findItems(fid));
+        url.search = new URLSearchParams(params).toString();
+        p = p.then(() => fetch(url)).then(response => response.json()).then(data => {
+            // Get all of our items
+        });
+    }
+    return p;
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    loadCollections().then(c => updateCollectionInfo(c));
+});
+
+</script>
+<body>
+    <div id="thisId">
+    </div>
+</body>
+</html>
